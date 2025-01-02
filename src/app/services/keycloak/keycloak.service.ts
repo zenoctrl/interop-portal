@@ -1,5 +1,7 @@
 import { Injectable } from '@angular/core';
+import { KEYCLOAK_CLIENT_ID, KEYCLOAK_REALM, KEYCLOAK_URL, REDIRECT_URI } from 'environments/environment';
 import Keycloak from "keycloak-js";
+
 
 export interface UserProfile {
   username?: string;
@@ -19,9 +21,9 @@ export class KeycloakService {
   get keycloak() {
     if (!this._keycloak) {
       this._keycloak = new Keycloak({
-        url: "http://localhost:8080",
-        realm: "interop-portal",
-        clientId: "angular-web-client",
+        url: KEYCLOAK_URL,
+        realm: KEYCLOAK_REALM,
+        clientId: KEYCLOAK_CLIENT_ID,
       });
     }
     return this._keycloak;
@@ -36,12 +38,14 @@ export class KeycloakService {
   async init() {
     const authenticated = await this.keycloak.init({
       onLoad: "login-required",
+      // silentCheckSsoRedirectUri: 'assets/silent-check-sso.html',
       enableLogging: true
     });
 
     if (authenticated) {
       this._profile = (await this.keycloak.loadUserProfile()) as UserProfile;
       this._profile.token = this.keycloak.token || "";
+      console.log(this._profile.token);
       this.isLoggedIn = true;
     } 
   }
@@ -51,7 +55,7 @@ export class KeycloakService {
   }
 
   logout() {
-    return this.keycloak.logout({ redirectUri: "http://localhost:4040" });
+    return this.keycloak.logout({ redirectUri: REDIRECT_URI });
   }
 
   isTokenExpired(): boolean {
